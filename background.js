@@ -1,7 +1,5 @@
-/*global require, chrome, alert */
-
 /**
- * Handler of chrome context menu creation process -creates a new item in the context menu
+ * Добавляем в контекстное меню Хрома пункт вызова расширения
  */
 chrome.contextMenus.create({
     "title": "Add Event to Calendar",
