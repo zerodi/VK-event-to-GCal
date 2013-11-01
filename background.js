@@ -1,84 +1,82 @@
 /**
- * Добавляем в контекстное меню Хрома пункт вызова расширения
+ * Добавляем пункт в контекстное меню (Временная реализация, в перспективе добавить в интерфейс).
  */
 chrome.contextMenus.create({
-    "title": "Add Event to Calendar",
+    "title": "Добавить в Google Calendar",
     "type": "normal",
     "contexts": ["image"],
-    "onclick": getClickHandler()
+    "onclick": getOnClick()
 });
 
-/**
- * Handle main functionality of 'onlick' chrome context menu item method
- */
-function getClickHandler() {
-    "use strict";
-
+function getOnClick() {
+    /**
+     * Функция возвращает окончательное значение getOnClick
+     */
     return function (info, tab) {
-
-        var imageSourceUrl       = info.srcUrl,
-            imageUploadHelperUrl = 'upload.html#',
-            vkCLientId           = '3965536',
-            vkRequestedScopes    = 'groups,offline',
-            vkAuthenticationUrl  = 'https://oauth.vk.com/authorize?client_id=' + vkCLientId + '&scope=' + vkRequestedScopes + '&redirect_uri=http%3A%2F%2Foauth.vk.com%2Fblank.html&display=page&response_type=token';
-
+        //Объявляем переменные для приложения и авторизации
+        var eventUrl = info.srcUrl,
+            infoTabUrl = 'showinfo.html#',
+            vkAppID = '3965536',
+            vkScopes = 'groups,offline',
+            vkRedirectUri = encodeURIComponent("http://oauth.vk.com/blank.html"),
+            vkAuthUrl = 'https://oauth.vk.com/authorize?client_id=' + vkAppID +
+                '&scope=' + vkScopes +
+                '&redirect_uri=' + vkRedirectUri +
+                '&display=page&response_type=token';
+        //Вызываем токен из хранилища
         chrome.storage.local.get({'vkaccess_token': {}}, function (items) {
-
+            //Проверяем наличие токена, если его нет, то получаем.
             if (items.vkaccess_token.length === undefined) {
-                chrome.tabs.create({url: vkAuthenticationUrl, selected: true}, function (tab) {
-                    chrome.tabs.onUpdated.addListener(listenerHandler(tab.id, imageSourceUrl));
+                chrome.tabs.create({url: vkAuthUrl, selected: true}, function (tab) {
+                    chrome.tabs.onUpdated.addListener(authListener(tab.id, eventUrl));
                 });
 
                 return;
             }
 
-            imageUploadHelperUrl += imageSourceUrl + '&' + items.vkaccess_token;
-
-            chrome.tabs.create({url: imageUploadHelperUrl, selected: true});
+            infoTabUrl += eventUrl + '&' + items.vkaccess_token;
+            //Открываем окно с инфой
+            chrome.tabs.create({url: infoTabUrl, selected: true});
 
         });
     };
-
     /**
-     * Chrome tab update listener handler. Return a function which is used as a listener itself by chrome.tabs.obUpdated
-     *
-     * @param  {string} authenticationTabId Id of the tab which is waiting for grant of permissions for the application
-     * @param  {string} imageSourceUrl      URL of the image which is uploaded
-     *
-     * @return {function}                   Listener for chrome.tabs.onUpdated
+     * Функция получает токен в случае, когда он отсутствует в хранилище
      */
-    function listenerHandler(authenticationTabId, imageSourceUrl) {
-        "use strict";
+    function authListener(authTabId, eventUrl) {
 
-        return function tabUpdateListener(tabId, changeInfo) {
+        return function tabUpdateListener (tabId, changeInfo) {
             var vkAccessToken,
                 vkAccessTokenExpiredFlag;
 
-            if (tabId === authenticationTabId && changeInfo.url !== undefined && changeInfo.status === "loading") {
+            if (tabId === authTabId && changeInfo.url !== undefined && changeInfo.status === "loading") {
 
                 if (changeInfo.url.indexOf('oauth.vk.com/blank.html') > -1) {
-                    authenticationTabId = null;
+                    authTabId = null;
                     chrome.tabs.onUpdated.removeListener(tabUpdateListener);
 
+                    //Получаем значение токена
                     vkAccessToken = getUrlParameterValue(changeInfo.url, 'access_token');
 
+                    //Выводим ошибку, если токен не получен
                     if (vkAccessToken === undefined || vkAccessToken.length === undefined) {
-                        displayeAnError('vk auth response problem', 'access_token length = 0 or vkAccessToken == undefined');
+                        showError('vk auth response problem', 'access_token length = 0 or vkAccessToken == undefined');
                         return;
                     }
-
+                    //Получаем отметку об истечении токена
                     vkAccessTokenExpiredFlag = Number(getUrlParameterValue(changeInfo.url, 'expires_in'));
 
+                    //Выводим ошибку, если токен истек
                     if (vkAccessTokenExpiredFlag !== 0) {
-                        displayeAnError('vk auth response problem', 'vkAccessTokenExpiredFlag != 0' + vkAccessToken);
+                        showError('vk auth response problem', 'vkAccessTokenExpiredFlag != 0' + vkAccessToken);
                         return;
                     }
-
+                    //Сохраняем токен в хранилище и обновляем вкладку
                     chrome.storage.local.set({'vkaccess_token': vkAccessToken}, function () {
                         chrome.tabs.update(
                             tabId,
                             {
-                                'url'   : 'upload.html#' + imageSourceUrl + '&' + vkAccessToken,
+                                'url' : 'showinfo.html#' + eventUrl + '&' + vkAccessToken,
                                 'active': true
                             },
                             function (tab) {}
@@ -90,17 +88,11 @@ function getClickHandler() {
     }
 
     /**
-     * Retrieve a value of a parameter from the given URL string
-     *
-     * @param  {string} url           Url string
-     * @param  {string} parameterName Name of the parameter
-     *
-     * @return {string}               Value of the parameter
+     * Парсим полученную ссылку и вытаскиваем из неё нужное значение
      */
     function getUrlParameterValue(url, parameterName) {
-        "use strict";
 
-        var urlParameters  = url.substr(url.indexOf("#") + 1),
+        var urlParameters = url.substr(url.indexOf("#") + 1),
             parameterValue = "",
             index,
             temp;
@@ -118,18 +110,10 @@ function getClickHandler() {
         return parameterValue;
     }
 
- /**
- * Display an alert with an error message, description
- *
- * @param  {string} textToShow  Error message text
- * @param  {string} errorToShow Error to show
- */
-function displayeAnError(textToShow, errorToShow) {
-    "use strict";
-
-    alert(textToShow + '\n' + errorToShow);
+    /**
+     * Функция вывода ошибки.
+     */
+    function showError(textToShow, errorToShow) {
+        alert(textToShow + '\n' + errorToShow);
+    }
 }
-}
-
-
-
