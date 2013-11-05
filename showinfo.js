@@ -16,7 +16,7 @@ function loadEventInfo(eventUrl) {
 
     getEventRequest.onload = onGetEvent;
     getEventRequest.open("GET", "https://api.vk.com/method/groups.getById?" +
-        "v=5.2" +
+        "&v=5.2" +
         "&group_id=" + eventUrl +
         "&fields=" + vkFields
     );
@@ -25,4 +25,8 @@ function loadEventInfo(eventUrl) {
 
 function onGetEvent(event) {
     var answer = JSON.parse(event.target.responce);
+//    document.getElementById("eventName").innerHTML = answer.name;
+//    document.getElementById("eventDescription").innerHTML = answer.description;
+    alert("name: " + answer.name + "\n" +
+    "description: " + answer.description);
 }

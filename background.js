@@ -4,7 +4,8 @@
 chrome.contextMenus.create({
     "title": "Добавить в Google Calendar",
     "type": "normal",
-    "contexts": ["image"],
+    "contexts": ["page"],
+    "documentUrlPatterns": ["*://vk.com/*"],
     "onclick": getOnClick()
 });
 
