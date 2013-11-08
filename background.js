@@ -9,17 +9,24 @@ chrome.contextMenus.create({
     "onclick": loadEventInfo
 });
 
-function loadEventInfo(data, tab) {
-    var eventUrl = "rockchaos",
+function loadEventInfo(tab) {
+    var eventUrl = tab.url,
      getEventRequest = new XMLHttpRequest(),
-     vkFields = "name,place,description,start_date,end_date";
+     vkFields = "name,place,description,start_date,finish_date";
+/*
+    if (eventUrl.search("event") != -1)
+    {*/
+        eventUrl = eventUrl.slice(6,eventUrl.length);
+/*    } else {
+        eventUrl = eventUrl.slice(1,eventUrl.length);
+    }*/
 
     getEventRequest.onload = getEventInfo;
 
     getEventRequest.open("GET",
         "http://api.vk.com/method/groups.getById?" +
-        "v=5.2" +
-        "&group_id=" + eventUrl +
+        "v=5.3" +
+        "&group_ids=" + eventUrl +
         "&fields=" + vkFields
      );
      getEventRequest.send(null);
@@ -34,13 +41,13 @@ function getEventInfo(event)
         startTime = timeConverter(vkEvent.response[0].start_date),
 //        location = vkEvent.response[0].place.address,
         endTime;
-        if (vkEvent.response[0].end_date === undefined)
+        if (vkEvent.response[0].finish_date === undefined)
         {
             endTime = timeConverter(parseInt(vkEvent.response[0].start_date) + 3600);
         }
         else
         {
-            endTime = timeConverter(vkEvent.response[0].end_date);
+            endTime = timeConverter(vkEvent.response[0].finish_date);
         };
     var gLink = "https://www.google.com/calendar/render?" +
                 "action=TEMPLATE" +
@@ -76,11 +83,11 @@ function timeConverter(UNIX_timestamp)
     }
 
     var date = new Date(UNIX_timestamp*1000);
-    var year = date.getFullYear(),
-        month = date.getMonth() + 1,
-        day = date.getDate(),
-        hour = date.getHours(),
-        min = date.getMinutes();
+    var year = date.getUTCFullYear(),
+        month = date.getUTCMonth() + 1,
+        day = date.getUTCDate(),
+        hour = date.getUTCHours(),
+        min = date.getUTCMinutes();
     var time = pad(year) + pad(month) + pad(day) + 'T' + pad(hour) + pad(min) + '00Z';
     return time;
 }
