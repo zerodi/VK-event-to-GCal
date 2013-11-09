@@ -2,7 +2,7 @@
     "manifest_version": 2,
 
     "name": "VK Event to Google Calendar",
-    "version": "0.2.0",
+    "version": "0.2.5",
     "description": "Add VK Event Information to Google Calendar",
 
     "icons": {
@@ -11,7 +11,8 @@
         "48": "ico/icon48.png"
     },
 
-    "permissions": ["contextMenus",
+    "permissions": [
+        "contextMenus",
         "tabs",
         "http://www.google.com/*",
         "https://www.google.com/",
@@ -20,6 +21,7 @@
 
     "background": {
     "scripts": [
-      "background.js"
+        "background.js",
+        "eventsend.js"
     ]}
 }
