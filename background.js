@@ -9,27 +9,37 @@ chrome.contextMenus.create({
     "onclick": loadEventInfo
 });
 
-function loadEventInfo(tab) {
-    var eventUrl = tab.url,
-     getEventRequest = new XMLHttpRequest(),
-     vkFields = "name,place,description,start_date,finish_date";
-/*
-    if (eventUrl.search("event") != -1)
-    {*/
+function loadEventInfo() {
+
+    // Do NOT forget that the method is ASYNCHRONOUS
+    chrome.tabs.query({
+        active: true,               // Select active tabs
+        lastFocusedWindow: true     // In the current window
+    }, function(Tabs) {
+        // Since there can only be one active tab in one active window,
+        //  the array has only one element
+        var tab = Tabs[0];
+        var eventUrl = tab.url;
+        var getEventRequest = new XMLHttpRequest(),
+            vkFields = "name,place,description,start_date,finish_date";
+        /*
+         if (eventUrl.search("event") != -1)
+         {*/
         eventUrl = eventUrl.slice(6,eventUrl.length);
-/*    } else {
-        eventUrl = eventUrl.slice(1,eventUrl.length);
-    }*/
+        /*    } else {
+         eventUrl = eventUrl.slice(1,eventUrl.length);
+         }*/
 
-    getEventRequest.onload = getEventInfo;
+        getEventRequest.onload = getEventInfo;
 
-    getEventRequest.open("GET",
-        "http://api.vk.com/method/groups.getById?" +
-        "v=5.3" +
-        "&group_ids=" + eventUrl +
-        "&fields=" + vkFields
-     );
-     getEventRequest.send(null);
+        getEventRequest.open("GET",
+            "http://api.vk.com/method/groups.getById?" +
+                "v=5.3" +
+                "&group_ids=" + eventUrl +
+                "&fields=" + vkFields
+        );
+        getEventRequest.send(null);
+    });
 }
 
 function getEventInfo(event)
