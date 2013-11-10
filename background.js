@@ -64,11 +64,10 @@ function getEventInfo(event)
                 "&details=" + description.slice(0, 160) +"...\n\n" +
                 "&output=xml";
     console.log(gLink);
-    gLink = decodeURI(gLink.replaceAll("  ", "\n\n")).replaceAll("+", "%2B").replaceAll("%20", "+").replaceAll(".", "%2E").substring(0,1000);
+    gLink = gLink.replaceAll("  ", "\n\n").replaceAll("+", "%2B").replaceAll("+", "%20").replaceAll(".", "%2E").substring(0,1000);
     console.log(gLink);
     chrome.tabs.create({ "url": gLink}, function (tab) {});
 }
-
 String.prototype.replaceAll = function(strTarget, strSubString){
     var strText = this,
         intIndexOfMatch = strText.indexOf( strTarget );
