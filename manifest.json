@@ -3,7 +3,7 @@
 
     "name": "VK Event to Google Calendar",
     "version": "0.2.5",
-    "description": "Add VK Event Information to Google Calendar",
+    "description": "Добавляет информацию о мероприятии из Вконтакте в Календарь Google",
 
     "icons": {
         "128": "ico/icon128.png",
@@ -21,7 +21,6 @@
 
     "background": {
     "scripts": [
-        "background.js",
-        "eventsend.js"
+        "background.js"
     ]}
 }
