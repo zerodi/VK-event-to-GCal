@@ -2,7 +2,7 @@
  * Добавляем пункт в контекстное меню (Временная реализация, в перспективе добавить в интерфейс).
  */
 chrome.contextMenus.create({
-    "title": "Добавить в Google Calendar Test",
+    "title": "Добавить в Google Calendar",
     "type": "normal",
     "contexts": ["all"],
     "documentUrlPatterns": ["*://vk.com/*"],
