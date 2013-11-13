@@ -20,24 +20,24 @@ function getOnClick() {
             lastFocusedWindow: true
         }, function(Tabs) {
         //Объявляем переменные для приложения и авторизации
-        console.log(Tabs[0]);
+
         var eventUrl = Tabs[0].url,
             eventSendUrl = 'sendEvent.html#',
             vkAppID = '3965536',
-            vkScopes = 'groups',
+            vkScopes = 'groups,offline',
             vkRedirectUri = encodeURIComponent("http://oauth.vk.com/blank.html"),
             vkAuthUrl = 'https://oauth.vk.com/authorize?client_id=' + vkAppID +
                 '&scope=' + vkScopes +
                 '&redirect_uri=' + vkRedirectUri +
                 '&display=page&response_type=token';
         //Вызываем токен из хранилища
-        console.log(eventUrl);
+
          chrome.storage.local.get({'vkaccess_token': {}}, function (items) {
             console.log(items.vkaccess_token);
             //Проверяем наличие токена, если его нет, то получаем.
             if (items.vkaccess_token.length === undefined) {
                 chrome.tabs.create({url: vkAuthUrl, selected: true}, function (tab) {
-                    chrome.tabs.onUpdated.addListener(authListener(tab.id))
+                    chrome.tabs.onUpdated.addListener(authListener(tab.id, eventUrl))
                 });
 
                 return;
@@ -46,7 +46,7 @@ function getOnClick() {
             /**
              * Дальше нужно прописать либо выполнение кода, либо заглушку.
             */
-            eventSendUrl += items.vkaccess_token;
+            eventSendUrl += eventUrl + "&" + items.vkaccess_token;
 
             chrome.tabs.create({url: eventSendUrl, selected: true});
 
@@ -54,11 +54,11 @@ function getOnClick() {
         })
     }
 
-};
+}
 /**
 * Функция получает токен в случае, когда он отсутствует в хранилище
 */
-    function authListener(authTabId) {
+    function authListener(authTabId, eventUrl) {
 
         return function tabUpdateListener (tabId, changeInfo) {
             var vkAccessToken,
@@ -83,7 +83,7 @@ function getOnClick() {
 
                     //Выводим ошибку, если токен истек
                     if (vkAccessTokenExpiredFlag !== 0) {
-                        showError('vk auth response problem', 'vkAccessTokenExpiredFlag != 0' + vkAccessToken);
+                        showError('vk auth response problem', 'vkAccessTokenExpiredFlag != 0');
                         return;
                     }
                     //Сохраняем токен в хранилище и обновляем вкладку
@@ -95,7 +95,7 @@ function getOnClick() {
                         chrome.tabs.update(
                             tabId,
                             {
-                                'url' : 'eventSend.html#' + vkAccessToken,
+                                'url' : 'sendEvent.html#' + eventUrl + "&" + vkAccessToken,
                                 'active': true
                             },
                             function (tab) {}

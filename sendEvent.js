@@ -1,76 +1,57 @@
 document.addEventListener("DOMContentLoaded", function () {
 
-    var params   = window.location.hash.substring(1).split('&'),
-        imageUrl = null,
-        filename,
-        imageName;
+    var params = window.location.hash.substring(1).split('&'),
+        eventUrl = params[0],
+        vkToken = params[1];
 
     if (params === undefined || params.length ===  undefined || params.length !== 2) {
         thereIsAnError('Parsing image url', 'params || params.length != 2', imageUrl);
         return;
     }
 
-    filename = params[0].split('/');
-
-    if (filename.length === undefined || filename.length === 0) {
-        thereIsAnError('Getting image filename', 'filename.length <= 0', imageUrl);
-        return;
-    }
-
-    imageUrl = params[0];
-
-    imageName = filename[filename.length - 1];
-
-    if (imageName.indexOf('?') > -1) {
-        imageName = imageName.slice(0, imageName.indexOf('?'));
-    }
-
-    if (imageName.indexOf('#') > -1) {
-        imageName = imageName.slice(0, imageName.indexOf('#'));
-    }
-
-    if (imageName.indexOf('&') > -1) {
-        imageName = imageName.slice(0, imageName.indexOf('&'));
-    }
-
-    upload(imageUrl, imageName, params[1]);
+    loadEventInfo(eventUrl, vkToken);
 });
 
-function loadEventInfo(vkToken) {
-    chrome.tabs.query({
-        active: true,
-        lastFocusedWindow: true
-    }, function(Tabs) {
-        var vktab = Tabs[0].url,
-            eventUrl = vktab.substring(14),
-            getEventRequest = new XMLHttpRequest(),
-            vkFields = "name,place,description,start_date,finish_date";
+function loadEventInfo(eventUrl, vkToken) {
 
-        if (eventUrl.search("event") != -1)
-        {
-            eventUrl = eventUrl.slice(5,eventUrl.length);
-        } else {
-            eventUrl = eventUrl.slice(0,eventUrl.length);
-        }
-        console.log(eventUrl);
-        getEventRequest.onload = getEventInfo();
+    var eventId = null,
+        getEventRequest = new XMLHttpRequest(),
+        vkFields = "name,place,description,start_date,finish_date";
 
-        getEventRequest.open("GET",
-            "http://api.vk.com/method/groups.getById?" +
-                "v=5.3" +
-                "&group_ids=" + eventUrl +
-                "&fields=" + vkFields +
-                "&access_token=" + vkToken
-        );
-        getEventRequest.send(null);
-    })
-};
+    if (eventUrl.search("https") != -1)
+    {
+        eventId = eventUrl.substring(15);
+    } else {
+        eventId = eventUrl.substring(14);
+    }
+
+    if (eventId.search("event") != -1)
+    {
+        eventId = eventId.slice(5,eventId.length);
+    } else {
+        eventId = eventId.slice(0,eventId.length);
+    }
+
+    getEventRequest.onload = getEventInfo;
+
+    getEventRequest.open("GET",
+        "https://api.vk.com/method/groups.getById?" +
+            "v=5.3" +
+            "&group_ids=" + eventId +
+            "&fields=" + vkFields +
+            "&access_token=" + vkToken
+    );
+
+    getEventRequest.send(null);
+}
 
 function getEventInfo(event)
 {
     var vkEvent = JSON.parse(event.target.response);
-
+    if (vkEvent.response[0].type === 'event')
+    {
     var vkEventName = vkEvent.response[0].name,
+        vkEventId = vkEvent.response[0].screen_name,
         description = vkEvent.response[0].description,
         startTime = timeConverter(vkEvent.response[0].start_date),
 //        location = vkEvent.response[0].place.address,
@@ -82,17 +63,20 @@ function getEventInfo(event)
     else
     {
         endTime = timeConverter(vkEvent.response[0].finish_date);
-    };
+    }
     var gLink = "https://www.google.com/calendar/render?" +
         "action=TEMPLATE" +
         "&text=" + vkEventName +
         "&dates=" + startTime + "/" + endTime +
 //                "&location=" + location +
-        "&details=" + description.slice(0, 160) +"...\n\n" + vktab +
+        "&details=" + description.slice(0, 200) +"...\nhttps://vk.com/" + vkEventId +
         "&output=xml";
-    gLink = gLink.replaceAll("  ", "\n\n").replaceAll("+", "%2B").replaceAll("+", "%20").replaceAll(".", "%2E").substring(0,1000);
-    chrome.tabs.create({ "url": gLink}, function (tab) {});
-};
+    gLink = gLink.replaceAll("\n", "%0A").replaceAll("+", "%2B").replaceAll("+", "%20").replaceAll(".", "%2E").replaceAll("#", "%23").substring(0,1000);
+    chrome.tabs.update({ "url": gLink}, function (tab) {});
+    } else {
+        document.getElementById('wrap').innerHTML = '<p></p><br/><br/><center><h1>Error! This is not an event!</h1></center><br/>'
+    }
+}
 
 String.prototype.replaceAll = function(strTarget, strSubString){
     var strText = this,
@@ -102,8 +86,7 @@ String.prototype.replaceAll = function(strTarget, strSubString){
         strText = strText.replace( strTarget, strSubString )
         intIndexOfMatch = strText.indexOf( strTarget );
     }
-    return( strText );
-};
+    return( strText )};
 
 function timeConverter(UNIX_timestamp)
 {
@@ -119,3 +102,4 @@ function timeConverter(UNIX_timestamp)
         min = date.getUTCMinutes(),
         time = pad(year) + pad(month) + pad(day) + 'T' + pad(hour) + pad(min) + '00Z';
     return time;
+}
