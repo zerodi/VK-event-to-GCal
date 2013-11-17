@@ -33,7 +33,6 @@ function getOnClick() {
         //Вызываем токен из хранилища
 
          chrome.storage.local.get({'vkaccess_token': {}}, function (items) {
-            console.log(items.vkaccess_token);
             //Проверяем наличие токена, если его нет, то получаем.
             if (items.vkaccess_token.length === undefined) {
                 chrome.tabs.create({url: vkAuthUrl, selected: true}, function (tab) {
@@ -91,7 +90,6 @@ function getOnClick() {
                         /**
                          * Аналогично, здесь у нас выполняется нужный нам код.
                          */
-                        console.log(vkAccessToken);
                         chrome.tabs.update(
                             tabId,
                             {
