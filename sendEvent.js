@@ -60,7 +60,7 @@ function getEventInfo(event)
     if (vkEvent.response[0].place === undefined) {
         location = "";
     } else {
-        location = "&location=" + getLccation(vkEvent.response[0].place.latitude,vkEvent.response[0].place.longitude)
+        location = "&location=" + getLocation(vkEvent.response[0].place.latitude,vkEvent.response[0].place.longitude)
     }
 
     if (vkEvent.response[0].finish_date === undefined)
@@ -111,8 +111,7 @@ function timeConverter(UNIX_timestamp)
     return time;
 }
 
-
-function getLccation(latitude, longitude) {
+function getLocation(latitude, longitude) {
 
     var getMapsLocation = new XMLHttpRequest();
     console.log(latitude + "," + longitude);

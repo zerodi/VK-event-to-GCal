@@ -2,7 +2,7 @@
     "manifest_version": 2,
 
     "name": "VK Event to Google Calendar",
-    "version": "0.4.0",
+    "version": "0.5.0",
     "description": "Добавляет информацию о мероприятии из Вконтакте в Календарь Google",
 
     "icons": {

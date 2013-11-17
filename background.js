@@ -19,7 +19,6 @@ function getOnClick() {
             active: true,
             lastFocusedWindow: true
         }, function(Tabs) {
-        //Объявляем переменные для приложения и авторизации
 
         var eventUrl = Tabs[0].url,
             eventSendUrl = 'sendEvent.html#',
@@ -30,7 +29,6 @@ function getOnClick() {
                 '&scope=' + vkScopes +
                 '&redirect_uri=' + vkRedirectUri +
                 '&display=page&response_type=token';
-        //Вызываем токен из хранилища
 
          chrome.storage.local.get({'vkaccess_token': {}}, function (items) {
             //Проверяем наличие токена, если его нет, то получаем.
