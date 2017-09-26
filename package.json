@@ -1,0 +1,29 @@
+{
+  "name": "vk-event-to-gcal",
+  "version": "0.6.1",
+  "description": "Chrome extension for import event from vk.com to google calendar",
+  "scripts": {
+    "build": "NODE_ENV=production webpack"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zerodi/VK-event-to-GCal.git"
+  },
+  "author": "Dmitriy Pyankov <mail@zerodi.ru>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/zerodi/VK-event-to-GCal/issues"
+  },
+  "homepage": "https://github.com/zerodi/VK-event-to-GCal#readme",
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.2",
+    "babel-preset-es2015": "^6.24.1",
+    "copy-webpack-plugin": "^4.0.1",
+    "uglifyjs-webpack-plugin": "^0.4.6",
+    "webpack": "^3.5.5",
+    "webpack-dev-server": "^2.7.1",
+    "dotenv-webpack": "^1.5.4"
+  }
+}

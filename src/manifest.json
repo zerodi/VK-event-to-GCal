@@ -2,26 +2,30 @@
     "manifest_version": 2,
 
     "name": "VK Event to Google Calendar",
-    "version": "0.5.0",
+    "version": "0.6.1",
     "description": "Добавляет информацию о мероприятии из Вконтакте в Календарь Google",
 
     "icons": {
-        "128": "ico/icon128.png",
-        "16": "ico/icon16.png",
-        "48": "ico/icon48.png"
+        "128": "img/ico/icon128.png",
+        "16": "img/ico/icon16.png",
+        "48": "img/ico/icon48.png"
     },
 
     "permissions": [
+        "background",
         "contextMenus",
         "tabs",
         "storage",
         "http://www.google.com/*",
         "https://www.google.com/",
+        "https://*.googleapis.com/*",
         "http://*.vk.com/*",
-        "https://*.vk.com/*"],
+        "https://*.vk.com/*"
+    ],
 
     "background": {
-    "scripts": [
-        "background.js"
-    ]}
+        "scripts": [
+            "app.bundle.js"
+        ]
+    }
 }
