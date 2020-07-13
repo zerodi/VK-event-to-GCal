@@ -8,44 +8,28 @@ export class Utils {
     }
 
     static getUrlParameterValue(url, parameterName) {
-
-        let urlParameters = url.substr(url.indexOf("#") + 1),
-            temp;
-
-        urlParameters = urlParameters.split("&");
-
-        for (let i = 0; i < urlParameters.length; i += 1) {
-            temp = urlParameters[i].split("=");
-
+        const urlParameters = url.substr(url.indexOf('#') + 1).split('&');
+        for (const param of urlParameters) {
+            const temp = param.split('=');
             if (temp[0] === parameterName) {
                 return temp[1];
             }
         }
-        return "";
+        return '';
     }
 
     static convertTime(timestamp) {
-        let date;
-        if (timestamp === undefined) {
-            date = Date.now();
-        } else {
-            date = new Date(timestamp*1000);
+        // Current date format: 20190920T160000
+        function pad(num) {
+            const z = new Array(2).join('0');
+            return (z + num).slice(-2);
         }
-        return date.toISOString();
-    }
 
-    static convertTimeOld(timestamp)
-    {
-        function pad(str) {
-            str = str.toString();
-            return (str.length === 1) ? '0' + str : str;
-        }
-        let date = new Date(timestamp*1000),
-            year = date.getUTCFullYear(),
-            month = date.getUTCMonth() + 1,
-            day = date.getUTCDate(),
-            hour = date.getUTCHours(),
-            min = date.getUTCMinutes();
-        return pad(year) + pad(month) + pad(day) + 'T' + pad(hour) + pad(min) + '00Z';
+        const d = timestamp === undefined
+            ? Date.now()
+            : new Date(timestamp * 1000);
+        const date = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
+        const time = `${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getMinutes())}`;
+        return `${date}T${time}`;
     }
 }

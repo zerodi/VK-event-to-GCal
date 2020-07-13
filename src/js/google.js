@@ -1,51 +1,44 @@
-import {Utils} from "./utils";
+import browser from "webextension-polyfill";
+import { Utils } from "./utils";
 
-export class Google {
-
-    static createEventInCal(vkEvent) {
+export class GoogleEvent {
+    static createEvent(vkEvent) {
         let params = {
-            'action': 'TEMPLATE',
-            'text': vkEvent.name,
-            'dates': `${vkEvent.start_date}/${vkEvent.end_date}`,
-            'location': vkEvent.location,
-            'details': `${vkEvent.description.slice(0, 200)}...\n\nhttps://vk.com/${vkEvent.id}`
+            text: vkEvent.name,
+            dates: `${vkEvent.start_date}/${vkEvent.end_date}`,
+            details: `${vkEvent.description.slice(0, 200)}...\n\nhttps://vk.com/${vkEvent.id}`
         };
+        if (vkEvent.location) {
+            params.location = Google.getLocation(vkEvent.location);
+        }
         let paramString = Utils.toQueryString(params)
             .replace(/\n/g, "%0A")
             .replace(/\+/g, "%2B")
             .replace(/ /g, "%20")
             .replace(/\./g, "%2E")
             .replace(/#/g, "%23");
-
-        chrome.tabs.create({
-            'url': `https://www.google.com/calendar/render?${paramString}`,
-            selected: true
-        }, function (tab) {});
+        const url = `https://calendar.google.com/calendar/r/eventedit?${paramString}`;
+        browser.tabs.create({
+            url: url,
+            active: true
+        });
     }
 
     static getLocation(params) {
-        let res = '';
-        let request = new XMLHttpRequest();
-        request.open('GET', `http://maps.googleapis.com/maps/api/geocode/json?${
-            Utils.toQueryString({
-                latlng: [params.latitude, params.longitude].join(','),
-                language: 'ru',
-                key: ''
-            })
-            }`, false);
-        request.send(null);
-
-        if (request.status === 200) {
-            let response = request.response;
-            if (response && response.results && response.results.length > 0) {
-                res = response.results[0].formatted_address;
+        const mapUrl = new URL("http://maps.googleapis.com/maps/api/geocode/json");
+        const queryParams = {
+            latlng: [params.latitude, params.longitude].join(","),
+            language: "ru",
+            key: ""
+        };
+        Object.keys(queryParams).forEach(key => mapUrl.searchParams.append(key, queryParams[key]));
+        return fetch(mapUrl).then((res) => {
+            if (response.status === 200) {
+                const res = response.json();
+                return res.results[0].formatted_address;
+            } else {
+                throw response.status;
             }
-        }
-        return res;
+        });
     }
-
-    static createEvent(event) {
-        Google.createEventInCal(event);
-    }
-
 }

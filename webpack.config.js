@@ -1,35 +1,35 @@
-const path = require("path");
-const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
+const path = require('path');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const Dotenv = require('dotenv-webpack');
 
-const options = {
+module.exports = {
+    mode: 'production',
     entry: './src/js/index.js',
     output: {
         path: path.resolve(__dirname, 'dist'),
         filename: 'app.bundle.js'
     },
     module: {
-        loaders: [
+        rules: [
             {
-                test: /\.js$/,
-                loader: "babel-loader",
-                exclude: /node_modules/
-            }
+                test: /\.js/,
+                exclude: /(node_modules|bower_components)/,
+                use: [{
+                    loader: 'babel-loader'
+                }]
+            },
         ]
     },
     plugins: [
-        new UglifyJSPlugin(),
         new CopyWebpackPlugin([
-            {from: 'src/img', to: 'img'},
-            {from: 'src/manifest.json', to: ''},
+            { from: 'src/img', to: 'img' },
+            { from: 'src/manifest.json', to: '' },
         ]),
-        new Dotenv()
-    ]
+        new Dotenv(),
+    ],
+    stats: {
+        colors: true
+    },
+    devtool: 'source-map',
 };
 
-if (process.env.NODE_ENV === "development") {
-    options.devtool = "cheap-module-eval-source-map";
-}
-
-module.exports = options;

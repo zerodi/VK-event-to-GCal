@@ -1,31 +1,31 @@
-import { Config } from "./config";
-import { Utils } from "./utils";
-import { Google } from "./google";
+import browser from 'webextension-polyfill';
+import { Config } from './config';
+import { Utils } from './utils';
 
-export class Auth
-{
+export class VkAuth {
 
     static get authUrl() {
-        return `https://oauth.vk.com/authorize?${Utils.toQueryString(Config.vk)}`
+        return `https://oauth.vk.com/authorize?${Utils.toQueryString(Config.vk)}`;
     }
 
     static getToken() {
-        return new Promise(
-            (resolve, reject) => {
-                chrome.storage.local.get({'vkaccess_token': {}}, (items) => {
-                    if (items.vkaccess_token.length !== undefined) {
-                        resolve(items.vkaccess_token);
-                    } else {
-                        chrome.tabs.create({
-                            url: Auth.authUrl,
-                            selected: true
-                        }, (tab) => {
-                            chrome.tabs.onUpdated.addListener(Auth.authListener(tab, resolve, reject))
-                        });
-                    }
-                });
-            }
-        )
+        return new Promise((resolve, reject) => {
+                browser.storage.local
+                    .get({ 'vkaccess_token': {} })
+                    .then((items) => {
+                        if (items.vkaccess_token.length !== undefined) {
+                            resolve(items.vkaccess_token);
+                        } else {
+                            browser.tabs.create({
+                                url: VkAuth.authUrl,
+                                selected: true
+                            }).then((tab) => {
+                                browser.tabs.onUpdated.addListener(VkAuth.authListener(tab, resolve, reject));
+                            });
+                        }
+                    });
+            },
+        );
     }
 
     static authListener(tab, resolve, reject) {
@@ -33,7 +33,7 @@ export class Auth
             let token, expired;
             if (tabId === tab.id && changeInfo.url !== undefined && changeInfo.status === 'loading') {
                 if (changeInfo.url.indexOf('blank.html') > -1) {
-                    chrome.windows.onCreated.removeListener(tabUpdateListener);
+                    browser.windows.onCreated.removeListener(tabUpdateListener);
                 }
 
                 token = Utils.getUrlParameterValue(changeInfo.url, 'access_token');
@@ -47,11 +47,9 @@ export class Auth
                     showError('vk auth response problem', 'vkAccessTokenExpiredFlag != 0');
                     reject();
                 }
-
-                chrome.storage.local.set({'vkaccess_token': token}, () => {
-                    chrome.tabs.remove(tab.id);
-                    resolve(token);
-                });
+                browser.storage.local.set({ 'vkaccess_token': token })
+                    .then(() => browser.tabs.remove(tab.id))
+                    .then(() => resolve(token));
 
             }
         };
@@ -59,66 +57,70 @@ export class Auth
 
 }
 
-export class Event
-{
+
+export class VkEvent {
     static get fields() {
         return [
-            'name', 'place', 'description', 'start_date', 'finish_date'
-        ].join(',')
+            'name', 'place', 'description', 'start_date', 'finish_date',
+        ].join(',');
     }
-    constructor(eventUrl, token)
-    {
+
+    constructor(eventUrl, token) {
         const regex = /com\/(event)?(<event>\d+|.+)/g;
         this.id = '';
         this.token = '';
         let event = regex.exec(eventUrl);
-        console.log(event);
-        if (event !== null) {
+        if (event.length > 0) {
             this.id = event[2];
         }
         this.token = token;
     }
 
     static getEvent(eventUrl, token) {
-        let event = new Event(eventUrl, token);
-        let getEventRequest = new XMLHttpRequest();
-        getEventRequest.onload = Event.getInfo;
-
-        getEventRequest.open('GET',
-            `https://api.vk.com/method/groups.getById?${
+        return new Promise(resolve => {
+            let event = new VkEvent(eventUrl, token);
+            fetch(`https://api.vk.com/method/groups.getById?${
                 Utils.toQueryString({
                     group_id: event.id,
                     v: Config.vk.v,
-                    fields: Event.fields,
-                    access_token: event.token
-                })}`, false
-        );
-        getEventRequest.send(null);
+                    fields: VkEvent.fields,
+                    access_token: event.token,
+                })}`)
+                .then(res => res.json())
+                .then(VkEvent.getInfo)
+                .then(resolve)
+                .catch(e => console.error(e));
+        });
+
+
     }
 
     static getInfo(res) {
-        let struct = JSON.parse(res.target.response);
-        if (struct.response[0]) {
-            struct = struct.response[0];
-        }
+        return new Promise(resolve => {
+            const result = Array.isArray(res.response)
+                ? res.response[0]
+                : res.response;
+            if (result.type === 'event') {
+                let event = {
+                    id: result.screen_name,
+                    name: result.name,
+                    description: result.description,
+                    start_date: Utils.convertTime(result.start_date),
+                    end_date: (result.finish_date)
+                        ? Utils.convertTime(result.finish_date)
+                        : Utils.convertTime(result.start_date + 3600),
+                    location: result.place,
+                };
+                resolve(event);
+            } else {
+                alert('This is not an event!');
+            }
+        });
 
-        if (struct.type === 'event') {
-            let event = {
-                id: struct.screen_name,
-                name: struct.name,
-                description: struct.description,
-                start_date: Utils.convertTimeOld(struct.start_date),
-                end_date: Utils.convertTimeOld(struct.finish_date || struct.start_date + 3600),
-                location: (struct.place) ? Google.getLocation(struct.place) : '',
-            };
-
-            Google.createEvent(event);
-        } else {
-            alert('This is not an event!')
-        }
 
     }
 }
+
 
 /**
  * Функция вывода ошибки.
