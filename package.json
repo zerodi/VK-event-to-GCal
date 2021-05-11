@@ -28,7 +28,7 @@
     "dotenv-webpack": "^2.0.0",
     "elliptic": "^6.5.3",
     "kind-of": "^6.0.3",
-    "lodash": "^4.17.19",
+    "lodash": "^4.17.21",
     "mixin-deep": "^2.0.1",
     "prettier": "^2.0.5",
     "set-value": "^3.0.2",
