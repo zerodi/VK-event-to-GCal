@@ -31,7 +31,7 @@
     "lodash": "^4.17.19",
     "mixin-deep": "^2.0.1",
     "prettier": "^2.0.5",
-    "set-value": "^3.0.2",
+    "set-value": "^4.0.1",
     "web-ext-types": "kelseasy/web-ext-types",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12"
